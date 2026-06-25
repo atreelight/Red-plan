@@ -866,19 +866,23 @@
       var matchQ = summaryResp.match(/整体优质率:\s*(\d+)\//);
       if (matchQ) totalQuality = parseInt(matchQ[1]);
 
-      // 获取扬光车主数据
-      var yangguangText = await frontendQuery('车型', '扬光', false);
+      // 获取扬光车主数据（直接从 staticRecords 过滤，避免正则解析出错）
       var yangguangCount = 0, yangguangConnect = 0, yangguangActivat = 0, yangguangQuality = 0;
-      if (yangguangText) {
-        var ygMatch = yangguangText.match(/匹配数量:\s*(\d+)/);
-        if (ygMatch) yangguangCount = parseInt(ygMatch[1]);
-        // 从字段分布中提取: 格式为 "    是: 131人"
-        var ygConnMatch = yangguangText.match(/是否添加企微（中台复核）:\n\s*是:\s*(\d+)/);
-        if (ygConnMatch) yangguangConnect = parseInt(ygConnMatch[1]);
-        var ygActMatch = yangguangText.match(/是否激活:\n\s*是:\s*(\d+)/);
-        if (ygActMatch) yangguangActivat = parseInt(ygActMatch[1]);
-        var ygQualMatch = yangguangText.match(/是否优质:\n\s*是:\s*(\d+)/);
-        if (ygQualMatch) yangguangQuality = parseInt(ygQualMatch[1]);
+      if (staticRecords && staticRecords.length > 0) {
+        var ygRecords = [];
+        for (var si = 0; si < staticRecords.length; si++) {
+          var car = staticRecords[si]['车型'] || '';
+          if (car.indexOf('扬光') >= 0) {
+            ygRecords.push(staticRecords[si]);
+          }
+        }
+        yangguangCount = ygRecords.length;
+        for (var yi = 0; yi < ygRecords.length; yi++) {
+          var r = ygRecords[yi];
+          if (r['是否添加企微（中台复核）'] === '是') yangguangConnect++;
+          if (r['是否激活'] === '是') yangguangActivat++;
+          if (r['是否优质'] === '是') yangguangQuality++;
+        }
       }
 
       // 获取上一次快照（localStorage）
