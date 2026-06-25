@@ -484,6 +484,16 @@
     '- 激活：已参与企业微信活动并发布朋友圈或带话题发帖\n' +
     '- 优质："是否优质"字段标记\n' +
     '- 转介绍：尚未启动，当前数据为0\n\n' +
+    '【五菱红标车型知识库】\n' +
+    '五菱红标是上汽通用五菱的商用车系列，品牌定位"致敬每一代奋斗者"，累计销量超2100万辆。红标四大产品谱系简称"扬宏荣之光"：\n\n' +
+    '1. 五菱扬光：纯电微面，面向城市末端配送物流市场。2025款在售（指导价7.38-12.58万），2026年6月发布升级版扬光Pro。注意：数据中"扬光""杨光""阳光"均为同一车型的不同写法，系统已做模糊匹配。\n' +
+    '2. 五菱宏光：经典创富神车，系列包含宏光增程版（6.88-7.98万）、宏光纯电版等多款动力车型。\n' +
+    '3. 五菱荣光：传统燃油商用车，荣光EV为荣光家族首款新能源产品（2026年上市），提供荣光与荣光L两款车型，支持"一车三动力"。\n' +
+    '4. 五菱之光：传统燃油微面，经典商用车型。\n\n' +
+    '【重要：五菱之光与五菱之光EV的区别】\n' +
+    '五菱之光EV与五菱之光虽然名称相似，但绝不是同一产品谱系！五菱之光EV是一款截然不同的全新纯电车型，并非之光的纯电版。在数据分析中，"之光"和"之光EV"必须作为两款独立车型分别统计，不可合并。同理，"宏光"与"宏光EV"、"荣光"与"荣光EV"也是不同车型，需分别统计。\n\n' +
+    '【五菱红标新能源转型】\n' +
+    '五菱红标已全面迈入新能源时代，扬光（纯电）、宏光（增程/纯电）、之光EV（纯电）、荣光EV（2026年上市）共同构成红标新能源产品矩阵。\n\n' +
     '【重要：数据准确性规则】\n' +
     '系统会在您回答前自动执行精确查询，并将查询结果注入上下文。请严格使用【查询结果】中的数字，不要自行从原始记录中数数，因为原始记录中车型等字段存在多种写法（如"扬光"和"五菱扬光"是同款车的不同写法），手动计数容易出错。查询结果中的"匹配数量"是经过模糊匹配的精确统计值。\n\n' +
     '【上下文记忆】\n' +
@@ -679,21 +689,29 @@
   async function smartQuery(userText) {
     var queries = [];
 
-    // 车型相关查询
-    var carKeywords = ['扬光', '宏光', '之光', '荣光', '征程', 'EV', '增程', '货运', '客运', '客车', '货车', '新卡', '小卡'];
-    for (var i = 0; i < carKeywords.length; i++) {
-      if (userText.indexOf(carKeywords[i]) >= 0) {
-        queries.push({ field: '车型', keyword: carKeywords[i], exact: false });
-        break; // 只取第一个匹配的车型
+    // 车型相关查询 — 支持多车型同时查询
+    // 先匹配复合词（之光EV、宏光EV 等），匹配后从文本中移除，避免基础词重复匹配
+    var compoundCars = ['之光EV', '宏光EV', '荣光EV', '宏光增程', '扬光Pro', '宏光MINI', '宏光PLUS'];
+    var textForSimple = userText;
+    for (var i = 0; i < compoundCars.length; i++) {
+      if (userText.indexOf(compoundCars[i]) >= 0) {
+        queries.push({ field: '车型', keyword: compoundCars[i], exact: false });
+        textForSimple = textForSimple.split(compoundCars[i]).join(''); // 移除已匹配的复合词
+      }
+    }
+    // 再匹配基础词（从移除复合词后的文本中查找）
+    var simpleCars = ['扬光', '宏光', '之光', '荣光', '征程', '新卡', '小卡'];
+    for (var i = 0; i < simpleCars.length; i++) {
+      if (textForSimple.indexOf(simpleCars[i]) >= 0) {
+        queries.push({ field: '车型', keyword: simpleCars[i], exact: false });
       }
     }
 
-    // 战区相关查询
+    // 战区相关查询 — 支持多战区同时查询
     var regionKeywords = ['华南', '华东', '华北', '西南', '西北', '中原', '中南', '东北'];
     for (var i = 0; i < regionKeywords.length; i++) {
       if (userText.indexOf(regionKeywords[i]) >= 0) {
         queries.push({ field: '战区', keyword: regionKeywords[i] + '战区', exact: true });
-        break;
       }
     }
 
