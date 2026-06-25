@@ -346,18 +346,85 @@
     @media (max-width: 900px) {
       .main-area { padding: 0 0.75rem 1.5rem; }
       .dash-header { margin: 0 0 1rem 0; padding: 1.25rem; border-radius: var(--radius); }
-      .kpi-strip { grid-template-columns: repeat(2,1fr); }
-      .insight-bar { grid-template-columns: repeat(2,1fr); }
+      .dash-header h1 { font-size: 1.25rem; }
+      .kpi-strip { grid-template-columns: repeat(2,1fr); gap: 0.6rem; }
+      .kpi-item { padding: 0.85rem 1rem; }
+      .kpi-item .kpi-num { font-size: 1.4rem; }
+      .insight-bar { grid-template-columns: repeat(2,1fr); gap: 0.5rem; }
       .chart-grid, .chart-grid.three { grid-template-columns: 1fr; }
+      .chart-card { padding: 0.75rem; }
+      .chart-wrap { min-height: 280px; }
+      .chart-wrap.tall { min-height: 320px; }
+      .section { margin-bottom: 1rem; }
+      .section-head { margin-bottom: 0.6rem; }
+      .section-head h2 { font-size: 0.95rem; }
+      .section-head .sh-desc { display: none; }
+      .table-wrap { max-height: 400px; }
+      .dash-footer { flex-direction: column; gap: 0.3rem; text-align: center; }
     }
     @media (max-width: 500px) {
-      .kpi-strip { grid-template-columns: 1fr 1fr; }
-      .dash-header .top-row { flex-direction: column; align-items: flex-start; }
-      .chat-window {
-        width: calc(100vw - 24px); right: 12px; bottom: 80px;
-        height: 65vh; border-radius: 12px 12px 0 0;
+      html { font-size: 14px; }
+      .main-area { padding: 0 0.5rem 5.5rem; }
+      .dash-header { padding: 1rem; margin: 0 0 0.75rem 0; border-radius: 8px; }
+      .dash-header h1 { font-size: 1.1rem; }
+      .dash-header .brand-icon { width: 28px; height: 28px; font-size: 1rem; }
+      .dash-header .top-row { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+      .dash-header .meta-row { gap: 0.5rem; font-size: 0.72rem; margin-top: 0.6rem; }
+      .dash-header .source-link { font-size: 0.7rem; padding: 0.3rem 0.75rem; }
+
+      .kpi-strip { grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-bottom: 1rem; }
+      .kpi-item { padding: 0.75rem 0.85rem; }
+      .kpi-item .kpi-num { font-size: 1.3rem; }
+      .kpi-item .kpi-label { font-size: 0.65rem; }
+      .kpi-item .kpi-sub { font-size: 0.65rem; }
+
+      .insight-bar { gap: 0.4rem; margin-bottom: 1rem; }
+      .insight-card { padding: 0.6rem 0.5rem; }
+      .insight-card .ic-value { font-size: 1rem; }
+      .insight-card .ic-label { font-size: 0.6rem; }
+      .insight-card .ic-sub { font-size: 0.6rem; }
+
+      .chart-card { padding: 0.6rem; }
+      .chart-wrap { min-height: 260px; }
+      .chart-wrap.tall { min-height: 300px; }
+      .chart-card .cc-title { font-size: 0.75rem; margin-bottom: 0.4rem; }
+
+      .section { margin-bottom: 0.85rem; }
+      .section-head { margin-bottom: 0.5rem; gap: 0.5rem; }
+      .section-head .sh-icon { width: 24px; height: 24px; font-size: 0.75rem; }
+      .section-head h2 { font-size: 0.9rem; }
+
+      /* FAB 按钮 — 增大触摸区域，确保移动端可点击 */
+      .fab-chat {
+        width: 56px; height: 56px;
+        bottom: 24px; right: 20px;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+        box-shadow: 0 4px 24px rgba(43,123,214,0.4);
       }
-      .fab-chat { width: 44px; height: 44px; bottom: 20px; right: 16px; }
+      .fab-chat svg { width: 26px; height: 26px; }
+      .fab-chat.minimized-badge::after { width: 20px; height: 20px; font-size: 0.7rem; top: 2px; right: 2px; }
+
+      /* 聊天窗口 — 移动端接近全屏 */
+      .chat-window {
+        width: calc(100vw - 16px);
+        right: 8px; left: 8px;
+        bottom: 88px;
+        height: 70vh;
+        max-height: calc(100vh - 110px);
+        border-radius: 12px;
+      }
+      .chat-window-header { padding: 0.6rem 0.85rem; font-size: 0.8rem; }
+      .chat-window .chat-messages { padding: 0.5rem 0.75rem; }
+      .chat-window .chat-messages .msg { font-size: 0.78rem; padding: 0.5rem 0.7rem; }
+      .chat-window .chat-input-area { padding: 0.5rem; }
+      .chat-window .chat-input-row input { padding: 0.65rem 0.75rem; font-size: 0.85rem; }
+      .chat-window .chat-input-row button { padding: 0.65rem 0.85rem; font-size: 0.8rem; }
+
+      .table-wrap { max-height: 350px; }
+      .table-wrap th, .table-wrap td { padding: 0.4rem 0.5rem; font-size: 0.72rem; }
+
+      .dash-footer { font-size: 0.65rem; padding-top: 0.8rem; }
     }
 
     /* ===== PRINT ===== */
@@ -523,6 +590,6 @@
     </div>
 
   <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
-  <script src="assets/charts.js?v=20260625m"></script>
+  <script src="assets/charts.js?v=20260625n"></script>
 </body>
 </html>
