@@ -814,6 +814,157 @@
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
   });
 
+  // ─── 生成日报 ───
+  async function generateDailyReport() {
+    showTyping();
+    try {
+      // 获取当前汇总数据
+      var summaryResp = await fetchLiveSummary();
+      if (!summaryResp) {
+        hideTyping();
+        addMessage('assistant', '获取数据失败，请检查网络连接后重试。');
+        return;
+      }
+
+      // 解析汇总文本中的关键数字
+      var totalRecords = 0, totalRed = 0, totalConnect = 0, totalActivat = 0, totalQuality = 0;
+      var matchTR = summaryResp.match(/总记录数:\s*(\d+)/);
+      if (matchTR) totalRecords = parseInt(matchTR[1]);
+      var matchR = summaryResp.match(/红标总计:\s*(\d+)/);
+      if (matchR) totalRed = parseInt(matchR[1]);
+      var matchC = summaryResp.match(/建联(\d+)/);
+      if (matchC) totalConnect = parseInt(matchC[1]);
+      var matchA = summaryResp.match(/激活(\d+)/);
+      if (matchA) totalActivat = parseInt(matchA[1]);
+      var matchQ = summaryResp.match(/优质(\d+)/);
+      if (matchQ) totalQuality = parseInt(matchQ[1]);
+
+      // 获取扬光车主数据
+      var yangguangText = await frontendQuery('车型', '扬光', false);
+      var yangguangCount = 0, yangguangConnect = 0, yangguangActivat = 0, yangguangQuality = 0;
+      if (yangguangText) {
+        var ygMatch = yangguangText.match(/匹配数量:\s*(\d+)/);
+        if (ygMatch) yangguangCount = parseInt(ygMatch[1]);
+        // 从字段分布中提取
+        var ygFields = yangguangText.split('字段分布:');
+        if (ygFields.length > 1) {
+          // 提取建联、激活、优质数量
+          var ygConnMatch = yangguangText.match(/是否添加企微（中台复核）:\s*\n\s*是:\s*(\d+)/);
+          if (ygConnMatch) yangguangConnect = parseInt(ygConnMatch[1]);
+          var ygActMatch = yangguangText.match(/是否激活:\s*\n\s*是:\s*(\d+)/);
+          if (ygActMatch) yangguangActivat = parseInt(ygActMatch[1]);
+          var ygQualMatch = yangguangText.match(/是否优质:\s*\n\s*是:\s*(\d+)/);
+          if (ygQualMatch) yangguangQuality = parseInt(ygQualMatch[1]);
+        }
+      }
+
+      // 获取上一次快照（localStorage）
+      var lastSnapshot = null;
+      try {
+        var stored = localStorage.getItem('dailyReportSnapshot');
+        if (stored) lastSnapshot = JSON.parse(stored);
+      } catch(e) {}
+
+      // 计算差异
+      var diffTR = lastSnapshot ? (totalRecords - lastSnapshot.total_records) : 0;
+      var diffRed = lastSnapshot ? (totalRed - lastSnapshot.red_count) : 0;
+      var diffConn = lastSnapshot ? (totalConnect - lastSnapshot.connect_count) : 0;
+      var diffAct = lastSnapshot ? (totalActivat - lastSnapshot.activat_count) : 0;
+      var diffQual = lastSnapshot ? (totalQuality - lastSnapshot.quality_count) : 0;
+      var diffYG = lastSnapshot ? (yangguangCount - lastSnapshot.yangguang_count) : 0;
+      var diffYGConn = lastSnapshot ? (yangguangConnect - lastSnapshot.yangguang_connect) : 0;
+      var diffYGAct = lastSnapshot ? (yangguangActivat - lastSnapshot.yangguang_activat) : 0;
+      var diffYGQual = lastSnapshot ? (yangguangQuality - lastSnapshot.yangguang_quality) : 0;
+
+      // 获取当前日期
+      var now = new Date();
+      var month = now.getMonth() + 1;
+      var day = now.getDate();
+      var dateStr = month + '.' + day;
+
+      // 计算百分比
+      var connRate = totalRed > 0 ? (totalConnect / totalRed * 100).toFixed(2) : '0.00';
+      var actRate = totalRed > 0 ? (totalActivat / totalRed * 100).toFixed(2) : '0.00';
+      var qualRate = totalRed > 0 ? (totalQuality / totalRed * 100).toFixed(2) : '0.00';
+      var ygConnRate = yangguangCount > 0 ? (yangguangConnect / yangguangCount * 100).toFixed(2) : '0.00';
+      var ygActRate = yangguangCount > 0 ? (yangguangActivat / yangguangCount * 100).toFixed(2) : '0.00';
+      var ygQualRate = yangguangCount > 0 ? (yangguangQuality / yangguangCount * 100).toFixed(2) : '0.00';
+
+      function fmtNum(val) {
+        if (val > 0) return '（新增' + val + '人）';
+        if (val < 0) return '（减少' + Math.abs(val) + '人）';
+        return '（持平）';
+      }
+
+      // 构建报告文本
+      var report = '【"红人计划"数据情况（' + dateStr + '）】\n\n';
+      report += '数据清洗后，总表共提取' + totalRecords + '条数据' + fmtNum(diffTR) + '，其中' + totalRed + '条为红标车型' + fmtNum(diffRed) + '。';
+      report += '总体建联量' + totalConnect + '人' + fmtNum(diffConn) + '，建联率' + connRate + '%。';
+      report += '总体激活量' + totalActivat + '人，激活率' + actRate + '%。';
+      report += '优质量（发帖三篇以上）' + totalQuality + '人，优质率' + qualRate + '%。\n\n';
+      report += '其中扬光车主有' + yangguangCount + '条数据' + fmtNum(diffYG) + '，建联' + yangguangConnect + '人' + fmtNum(diffYGConn) + '，建联率' + ygConnRate + '%，';
+      report += '激活量' + yangguangActivat + '人，激活率' + ygActRate + '%，优质量' + yangguangQuality + '人，优质率' + ygQualRate + '%。\n\n';
+
+      // 亮点：找出增长最多的战区
+      report += '📌 今日亮点\n';
+      // 获取各战区数据从 summary
+      var regionMatch = summaryResp.match(/华南战区[\s\S]*?东北战区/);
+      if (regionMatch) {
+        var regionLines = summaryResp.split('\n');
+        var maxRegion = '', maxRegionTotal = 0;
+        var inactiveRegions = [];
+        for (var k = 0; k < regionLines.length; k++) {
+          var line = regionLines[k];
+          if (line.indexOf('战区') >= 0 && line.indexOf('总人数') >= 0) {
+            var rName = line.match(/(\S+战区)/);
+            var rTotal = line.match(/总人数(\d+)/);
+            if (rName && rTotal) {
+              var n = parseInt(rTotal[1]);
+              if (n > maxRegionTotal) { maxRegionTotal = n; maxRegion = rName[1]; }
+              if (n === 0) { inactiveRegions.push(rName[1]); }
+            }
+          }
+        }
+        if (maxRegion) {
+          report += '今日增长主要来源' + maxRegion + '。';
+        }
+        if (inactiveRegions.length > 0) {
+          report += inactiveRegions.join('、') + '还未启动。';
+        }
+      }
+
+      hideTyping();
+      addMessage('assistant', report);
+
+      // 保存当前快照
+      var snapshot = {
+        date: dateStr,
+        total_records: totalRecords,
+        red_count: totalRed,
+        connect_count: totalConnect,
+        activat_count: totalActivat,
+        quality_count: totalQuality,
+        yangguang_count: yangguangCount,
+        yangguang_connect: yangguangConnect,
+        yangguang_activat: yangguangActivat,
+        yangguang_quality: yangguangQuality
+      };
+      try { localStorage.setItem('dailyReportSnapshot', JSON.stringify(snapshot)); } catch(e) {}
+
+    } catch(e) {
+      hideTyping();
+      addMessage('assistant', '生成日报时出现异常，请稍后重试。');
+    }
+  }
+
+  // ─── 绑定生成日报按钮 ───
+  var dailyReportBtn = document.getElementById('dailyReportBtn');
+  if (dailyReportBtn) {
+    dailyReportBtn.addEventListener('click', function() {
+      generateDailyReport();
+    });
+  }
+
   // ===================== FAB CHAT CONTROLS =====================
   var fabBtn = document.getElementById('fabChatBtn');
   var chatWin = document.getElementById('chatWindow');

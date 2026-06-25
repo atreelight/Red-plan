@@ -393,7 +393,7 @@
           <span class="badge"><span class="dot"></span>数据来源：直联库（中台填写）</span>
           <span class="pill">数据截止 2026年6月</span>
           <span>8 大战区 · 红标口径统计</span>
-          <span>银标宝骏华境已剔除（表统计的是五菱红标）</span>
+          <span>非红标车型已剔除</span>
           <span class="update-at">数据更新于 <strong id="headerUpdateTime">—</strong></span>
         </div>
       </header>
@@ -417,7 +417,7 @@
       <section class="section">
         <div class="section-head">
           <div class="sh-icon" style="background:#f0fdf4;color:var(--success);">★</div>
-          <h2>重点战区 Spotlight · 中南战区</h2>
+          <h2>亮点战区 Spotlight · <span id="spotlightRegion" style="display:inline-block;background:rgba(5,150,105,0.1);color:var(--success);padding:0 0.5rem;border-radius:4px;font-style:italic;border:1px dashed rgba(5,150,105,0.3);">中南战区</span></h2>
           <span class="sh-desc">以下数据均为中南战区明细</span>
         </div>
         <div class="insight-bar" id="insightBar"></div>
@@ -512,6 +512,9 @@
           <input type="text" id="chatInput" placeholder="输入问题，分析数据..." />
           <button id="chatSendBtn">发送</button>
         </div>
+        <div style="display:flex;gap:0.4rem;margin-top:0.4rem;">
+          <button id="dailyReportBtn" style="flex:1;border:1px solid var(--teal);border-radius:6px;padding:0.3rem 0;background:transparent;color:var(--teal);font-size:0.7rem;cursor:pointer;font-weight:600;transition:0.2s;" onmouseover="this.style.background='rgba(13,148,136,0.08)'" onmouseout="this.style.background='transparent'">📋 生成日报</button>
+        </div>
         <div class="chat-footer-note" style="display:flex;justify-content:space-between;">
           <span>AI 输出仅供辅助决策参考</span>
           <span id="liveModeBadge" style="display:none;">已连接数据源</span>
@@ -520,6 +523,6 @@
     </div>
 
   <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
-  <script src="assets/charts.js?v=20260625i"></script>
+  <script src="assets/charts.js?v=20260625j"></script>
 </body>
 </html>
