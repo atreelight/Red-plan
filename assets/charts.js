@@ -818,6 +818,25 @@
   async function generateDailyReport() {
     showTyping();
     try {
+      // 首次使用时，设置 6.24 的基准快照用于对比
+      try {
+        var stored = localStorage.getItem('dailyReportSnapshot');
+        if (!stored) {
+          var defaultSnapshot = {
+            date: '6.24',
+            total_records: 498,
+            red_count: 443,
+            connect_count: 335,
+            activat_count: 44,
+            quality_count: 5,
+            yangguang_count: 189,
+            yangguang_connect: 131,
+            yangguang_activat: 20,
+            yangguang_quality: 2
+          };
+          localStorage.setItem('dailyReportSnapshot', JSON.stringify(defaultSnapshot));
+        }
+      } catch(e) {}
       // 获取当前汇总数据
       var summaryResp = await fetchLiveSummary();
       if (!summaryResp) {
@@ -826,17 +845,25 @@
         return;
       }
 
-      // 解析汇总文本中的关键数字
+      // 解析汇总文本中的关键数字（从汇总行取，不是战区行）
+      // 文本格式:
+      //   总记录数: 502, 红标总计: 446人
+      //   整体建联率: 338/446 = 75.8%
+      //   整体激活率: 44/446 = 9.9%
+      //   整体优质率: 5/446 = 1.1%
       var totalRecords = 0, totalRed = 0, totalConnect = 0, totalActivat = 0, totalQuality = 0;
       var matchTR = summaryResp.match(/总记录数:\s*(\d+)/);
       if (matchTR) totalRecords = parseInt(matchTR[1]);
       var matchR = summaryResp.match(/红标总计:\s*(\d+)/);
       if (matchR) totalRed = parseInt(matchR[1]);
-      var matchC = summaryResp.match(/建联(\d+)/);
+      // 建联: 取 "整体建联率: 338/" 中的 338
+      var matchC = summaryResp.match(/整体建联率:\s*(\d+)\//);
       if (matchC) totalConnect = parseInt(matchC[1]);
-      var matchA = summaryResp.match(/激活(\d+)/);
+      // 激活: 取 "整体激活率: 44/" 中的 44
+      var matchA = summaryResp.match(/整体激活率:\s*(\d+)\//);
       if (matchA) totalActivat = parseInt(matchA[1]);
-      var matchQ = summaryResp.match(/优质(\d+)/);
+      // 优质: 取 "整体优质率: 5/" 中的 5
+      var matchQ = summaryResp.match(/整体优质率:\s*(\d+)\//);
       if (matchQ) totalQuality = parseInt(matchQ[1]);
 
       // 获取扬光车主数据
@@ -845,17 +872,13 @@
       if (yangguangText) {
         var ygMatch = yangguangText.match(/匹配数量:\s*(\d+)/);
         if (ygMatch) yangguangCount = parseInt(ygMatch[1]);
-        // 从字段分布中提取
-        var ygFields = yangguangText.split('字段分布:');
-        if (ygFields.length > 1) {
-          // 提取建联、激活、优质数量
-          var ygConnMatch = yangguangText.match(/是否添加企微（中台复核）:\s*\n\s*是:\s*(\d+)/);
-          if (ygConnMatch) yangguangConnect = parseInt(ygConnMatch[1]);
-          var ygActMatch = yangguangText.match(/是否激活:\s*\n\s*是:\s*(\d+)/);
-          if (ygActMatch) yangguangActivat = parseInt(ygActMatch[1]);
-          var ygQualMatch = yangguangText.match(/是否优质:\s*\n\s*是:\s*(\d+)/);
-          if (ygQualMatch) yangguangQuality = parseInt(ygQualMatch[1]);
-        }
+        // 从字段分布中提取: 格式为 "    是: 131人"
+        var ygConnMatch = yangguangText.match(/是否添加企微（中台复核）:\n\s*是:\s*(\d+)/);
+        if (ygConnMatch) yangguangConnect = parseInt(ygConnMatch[1]);
+        var ygActMatch = yangguangText.match(/是否激活:\n\s*是:\s*(\d+)/);
+        if (ygActMatch) yangguangActivat = parseInt(ygActMatch[1]);
+        var ygQualMatch = yangguangText.match(/是否优质:\n\s*是:\s*(\d+)/);
+        if (ygQualMatch) yangguangQuality = parseInt(ygQualMatch[1]);
       }
 
       // 获取上一次快照（localStorage）
@@ -865,7 +888,7 @@
         if (stored) lastSnapshot = JSON.parse(stored);
       } catch(e) {}
 
-      // 计算差异
+      // 计算差异（diff=0 时不显示任何标注）
       var diffTR = lastSnapshot ? (totalRecords - lastSnapshot.total_records) : 0;
       var diffRed = lastSnapshot ? (totalRed - lastSnapshot.red_count) : 0;
       var diffConn = lastSnapshot ? (totalConnect - lastSnapshot.connect_count) : 0;
@@ -890,47 +913,45 @@
       var ygActRate = yangguangCount > 0 ? (yangguangActivat / yangguangCount * 100).toFixed(2) : '0.00';
       var ygQualRate = yangguangCount > 0 ? (yangguangQuality / yangguangCount * 100).toFixed(2) : '0.00';
 
-      function fmtNum(val) {
+      // diff 格式：>0 显示新增，<0 显示减少，=0 不显示
+      function fmtDiff(val) {
         if (val > 0) return '（新增' + val + '人）';
         if (val < 0) return '（减少' + Math.abs(val) + '人）';
-        return '（持平）';
+        return ''; // diff=0 什么都不显示
       }
 
-      // 构建报告文本
+      // 构建报告
       var report = '【"红人计划"数据情况（' + dateStr + '）】\n\n';
-      report += '数据清洗后，总表共提取' + totalRecords + '条数据' + fmtNum(diffTR) + '，其中' + totalRed + '条为红标车型' + fmtNum(diffRed) + '。';
-      report += '总体建联量' + totalConnect + '人' + fmtNum(diffConn) + '，建联率' + connRate + '%。';
+      report += '数据清洗后，总表共提取' + totalRecords + '条数据' + fmtDiff(diffTR) + '，其中' + totalRed + '条为红标车型' + fmtDiff(diffRed) + '。';
+      report += '总体建联量' + totalConnect + '人' + fmtDiff(diffConn) + '，建联率' + connRate + '%。';
       report += '总体激活量' + totalActivat + '人，激活率' + actRate + '%。';
       report += '优质量（发帖三篇以上）' + totalQuality + '人，优质率' + qualRate + '%。\n\n';
-      report += '其中扬光车主有' + yangguangCount + '条数据' + fmtNum(diffYG) + '，建联' + yangguangConnect + '人' + fmtNum(diffYGConn) + '，建联率' + ygConnRate + '%，';
+      report += '其中扬光车主有' + yangguangCount + '条数据' + fmtDiff(diffYG) + '，建联' + yangguangConnect + '人' + fmtDiff(diffYGConn) + '，建联率' + ygConnRate + '%，';
       report += '激活量' + yangguangActivat + '人，激活率' + ygActRate + '%，优质量' + yangguangQuality + '人，优质率' + ygQualRate + '%。\n\n';
 
-      // 亮点：找出增长最多的战区
+      // 📌 亮点：分析各战区
       report += '📌 今日亮点\n';
-      // 获取各战区数据从 summary
-      var regionMatch = summaryResp.match(/华南战区[\s\S]*?东北战区/);
-      if (regionMatch) {
-        var regionLines = summaryResp.split('\n');
-        var maxRegion = '', maxRegionTotal = 0;
-        var inactiveRegions = [];
-        for (var k = 0; k < regionLines.length; k++) {
-          var line = regionLines[k];
-          if (line.indexOf('战区') >= 0 && line.indexOf('总人数') >= 0) {
-            var rName = line.match(/(\S+战区)/);
-            var rTotal = line.match(/总人数(\d+)/);
-            if (rName && rTotal) {
-              var n = parseInt(rTotal[1]);
-              if (n > maxRegionTotal) { maxRegionTotal = n; maxRegion = rName[1]; }
-              if (n === 0) { inactiveRegions.push(rName[1]); }
-            }
+      var regionLines = summaryResp.split('\n');
+      var maxRegion = '', maxRegionTotal = 0;
+      var inactiveRegions = [];
+      for (var k = 0; k < regionLines.length; k++) {
+        var line = regionLines[k];
+        if (line.indexOf('战区') >= 0 && line.indexOf('总人数') >= 0) {
+          var rName = line.match(/(\S+战区)/);
+          var rTotal = line.match(/总人数(\d+)/);
+          if (rName && rTotal) {
+            var n = parseInt(rTotal[1]);
+            if (n > maxRegionTotal) { maxRegionTotal = n; maxRegion = rName[1]; }
+            // ≤2 人视为未启动（西南战区2人为人工塞入）
+            if (n <= 2) { inactiveRegions.push(rName[1]); }
           }
         }
-        if (maxRegion) {
-          report += '今日增长主要来源' + maxRegion + '。';
-        }
-        if (inactiveRegions.length > 0) {
-          report += inactiveRegions.join('、') + '还未启动。';
-        }
+      }
+      if (maxRegion) {
+        report += '今日增长主要来源' + maxRegion + '。';
+      }
+      if (inactiveRegions.length > 0) {
+        report += inactiveRegions.join('、') + '还未启动。';
       }
 
       hideTyping();
