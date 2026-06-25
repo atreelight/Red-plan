@@ -427,6 +427,29 @@
       .dash-footer { font-size: 0.65rem; padding-top: 0.8rem; }
     }
 
+    /* ===== 触摸设备性能优化：禁用 hover 效果，避免粘滞卡顿 ===== */
+    @media (hover: none) {
+      .kpi-item:hover { transform: none; box-shadow: var(--shadow); }
+      .fab-chat:hover { transform: none; box-shadow: 0 4px 20px rgba(43,123,214,0.35); }
+      .dash-header .source-link:hover { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.75); }
+      .cw-btn:hover { background: transparent; color: var(--muted); }
+      .chat-window .chat-input-row button:hover { background: var(--teal); }
+      .table-wrap tbody tr:hover td { background: transparent; }
+      .kpi-item { transition: none; }
+      .fab-chat { transition: none; }
+    }
+
+    /* ===== 移动端滚动性能优化 ===== */
+    @media (max-width: 500px) {
+      html { scroll-behavior: auto; }
+      .kpi-item { transition: none; }
+      .fab-chat { transition: none; }
+      .chat-window { animation: none; }
+      .chart-card { box-shadow: none; border: 1px solid var(--rule); }
+      .kpi-item { box-shadow: none; border: 1px solid var(--rule); }
+      .insight-card { box-shadow: none; border: 1px solid var(--rule); }
+    }
+
     /* ===== PRINT ===== */
     @media print {
       .fab-chat, .chat-window { display: none !important; }
@@ -590,6 +613,6 @@
     </div>
 
   <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
-  <script src="assets/charts.js?v=20260625n"></script>
+  <script src="assets/charts.js?v=20260625o"></script>
 </body>
 </html>
