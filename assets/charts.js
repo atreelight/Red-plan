@@ -853,23 +853,30 @@
   async function generateDailyReport() {
     showTyping();
     try {
-      // 首次使用时，设置 6.24 的基准快照用于对比
+      // 始终使用 6.24 作基准对比（不覆盖，不滚动更新）
+      // 如果已存储的快照不是 6.24，强制重置为 6.24
       try {
         var stored = localStorage.getItem('dailyReportSnapshot');
+        var baselineSnapshot = {
+          date: '6.24',
+          total_records: 498,
+          red_count: 443,
+          connect_count: 335,
+          activat_count: 44,
+          quality_count: 5,
+          yangguang_count: 189,
+          yangguang_connect: 131,
+          yangguang_activat: 20,
+          yangguang_quality: 2
+        };
         if (!stored) {
-          var defaultSnapshot = {
-            date: '6.24',
-            total_records: 498,
-            red_count: 443,
-            connect_count: 335,
-            activat_count: 44,
-            quality_count: 5,
-            yangguang_count: 189,
-            yangguang_connect: 131,
-            yangguang_activat: 20,
-            yangguang_quality: 2
-          };
-          localStorage.setItem('dailyReportSnapshot', JSON.stringify(defaultSnapshot));
+          localStorage.setItem('dailyReportSnapshot', JSON.stringify(baselineSnapshot));
+        } else {
+          // 即使已有快照，也确保它始终是 6.24 基准（之前错误保存了当天数据则修复）
+          var parsed = JSON.parse(stored);
+          if (parsed.date !== '6.24') {
+            localStorage.setItem('dailyReportSnapshot', JSON.stringify(baselineSnapshot));
+          }
         }
       } catch(e) {}
       // 获取当前汇总数据
@@ -995,21 +1002,6 @@
 
       hideTyping();
       addMessage('assistant', report);
-
-      // 保存当前快照
-      var snapshot = {
-        date: dateStr,
-        total_records: totalRecords,
-        red_count: totalRed,
-        connect_count: totalConnect,
-        activat_count: totalActivat,
-        quality_count: totalQuality,
-        yangguang_count: yangguangCount,
-        yangguang_connect: yangguangConnect,
-        yangguang_activat: yangguangActivat,
-        yangguang_quality: yangguangQuality
-      };
-      try { localStorage.setItem('dailyReportSnapshot', JSON.stringify(snapshot)); } catch(e) {}
 
     } catch(e) {
       hideTyping();
