@@ -1,4 +1,4 @@
-// assets/charts.js — 红人计划仪表盘 v3
+// assets/charts.js — 红人计划仪表盘 v4
 (function() {
   'use strict';
 
@@ -853,25 +853,32 @@
   async function generateDailyReport() {
     showTyping();
     try {
-      // 首次使用（无快照）时设置 6.24 作为初始基准
-      // 之后每次生成日报自动保存当天快照，实现滚动对比
-      // 特殊日期自动适配：周一 vs 上周五、节后 vs 节前等（因为最后一次保存的自然是前一个工作日）
+      // 按日期存储快照（dailyData_6.24、dailyData_6.25...）
+      // 查找基准时自动取最新一个非今天的快照
+      // 周五数据保存后，周一打不开周末数据，自然回退到周五 → 周一 vs 上周五 ✅
       try {
-        var stored = localStorage.getItem('dailyReportSnapshot');
-        if (!stored) {
-          var baselineSnapshot = {
-            date: '6.24',
-            total_records: 498,
-            red_count: 443,
-            connect_count: 335,
-            activat_count: 44,
-            quality_count: 5,
-            yangguang_count: 189,
-            yangguang_connect: 131,
-            yangguang_activat: 20,
-            yangguang_quality: 2
-          };
-          localStorage.setItem('dailyReportSnapshot', JSON.stringify(baselineSnapshot));
+        var hasData = false;
+        for (var ki = 0; ki < localStorage.length; ki++) {
+          var k = localStorage.key(ki);
+          if (k && k.indexOf('dailyData_') === 0) { hasData = true; break; }
+        }
+        if (!hasData) {
+          // 迁移旧存储（dailyReportSnapshot）或设初始基准
+          var oldStored = localStorage.getItem('dailyReportSnapshot');
+          var initialData;
+          if (oldStored) {
+            try { initialData = JSON.parse(oldStored); } catch(e) {}
+          }
+          if (!initialData) {
+            initialData = {
+              date: '6.24',
+              total_records: 498, red_count: 443, connect_count: 335,
+              activat_count: 44, quality_count: 5,
+              yangguang_count: 189, yangguang_connect: 131,
+              yangguang_activat: 20, yangguang_quality: 2
+            };
+          }
+          localStorage.setItem('dailyData_' + initialData.date, JSON.stringify(initialData));
         }
       } catch(e) {}
       // 获取当前汇总数据
@@ -922,11 +929,23 @@
         }
       }
 
-      // 获取上一次快照（localStorage）
+      // 获取对比基准：从 dailyData_* 中找最新一个非今天的快照
+      // 例如：今天6.25，有 dailyData_6.24 和 dailyData_6.25 → 取 6.24
+      // 周一：有 dailyData_6.26(周五) → 取 6.26 → 周一 vs 上周五 ✅
       var lastSnapshot = null;
       try {
-        var stored = localStorage.getItem('dailyReportSnapshot');
-        if (stored) lastSnapshot = JSON.parse(stored);
+        var todayStr = dateStr;
+        var bestDate = '';
+        for (var ki = 0; ki < localStorage.length; ki++) {
+          var k = localStorage.key(ki);
+          if (k && k.indexOf('dailyData_') === 0) {
+            var d = k.substring(10); // 'dailyData_'.length
+            if (d !== todayStr && d > bestDate) {
+              bestDate = d;
+              try { lastSnapshot = JSON.parse(localStorage.getItem(k)); } catch(e) {}
+            }
+          }
+        }
       } catch(e) {}
 
       // 计算差异（diff=0 时不显示任何标注）
@@ -998,8 +1017,8 @@
       hideTyping();
       addMessage('assistant', report);
 
-      // 保存当天快照，作为下一天的对比基准（滚动更新）
-      // 特殊日期自动适配：周五保存后，周一自然与上周五对比
+      // 保存当天快照（dailyData_日期 格式）
+      // 同一天多次点击只覆盖 key，不影响基准查找（查找时跳过当天）
       var snapshot = {
         date: dateStr,
         total_records: totalRecords,
@@ -1012,7 +1031,7 @@
         yangguang_activat: yangguangActivat,
         yangguang_quality: yangguangQuality
       };
-      try { localStorage.setItem('dailyReportSnapshot', JSON.stringify(snapshot)); } catch(e) {}
+      try { localStorage.setItem('dailyData_' + dateStr, JSON.stringify(snapshot)); } catch(e) {}
 
     } catch(e) {
       hideTyping();
