@@ -102,13 +102,23 @@
   // ===================== CHART UTILITY =====================
   var barColors = ['#2B7BD6','#0D9488','#6366F1','#D97706','#94A3B8','#94A3B8','#059669','#7C3AED'];
 
+  // 全局 resize 防抖 — 所有图表共用一个监听器，避免移动端卡顿
+  var resizeTimer = null;
+  window.addEventListener('resize', function() {
+    if (resizeTimer) clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(function() {
+      for (var id in charts) {
+        if (charts[id]) charts[id].resize();
+      }
+    }, 150);
+  });
+
   function makeChart(id, option) {
     if (charts[id]) {
       charts[id].dispose();
     }
     var chart = echarts.init(document.getElementById(id), null, { renderer: 'canvas' });
     chart.setOption(option);
-    window.addEventListener('resize', function(){ chart.resize(); });
     charts[id] = chart;
     return chart;
   }
