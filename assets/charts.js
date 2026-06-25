@@ -143,9 +143,16 @@
       xAxis: { type:'category', data:regions, axisLabel:{color:muted,fontSize:9}, axisLine:{lineStyle:{color:rule}} },
       yAxis: { type:'value', minInterval:1, axisLabel:{color:muted,fontSize:10}, splitLine:{lineStyle:{color:rule,type:'dashed'}} },
       series: [
-        { name:'总人数', type:'bar', stack:'total', data:total, itemStyle:{color:teal}, barMaxWidth:40 },
-        { name:'建联人数', type:'bar', stack:'total', data:connect, itemStyle:{color:success} },
-        { name:'激活人数', type:'bar', stack:'total', data:activat, itemStyle:{color:warning} }
+        { name:'总人数', type:'bar', data:total,
+          itemStyle:{ color:'rgba(13,148,136,0.18)', borderColor:teal, borderWidth:1.5, borderRadius:[4,4,0,0] },
+          barWidth:38,
+          label:{ show:true, position:'top', color:ink, fontSize:9, fontWeight:600, formatter:function(p){return p.value>0?p.value:'';} } },
+        { name:'建联人数', type:'bar', data:connect,
+          itemStyle:{ color:'rgba(5,150,105,0.55)', borderRadius:[3,3,0,0] },
+          barWidth:26, barGap:'-100%' },
+        { name:'激活人数', type:'bar', data:activat,
+          itemStyle:{ color:warning, borderRadius:[2,2,0,0] },
+          barWidth:14, barGap:'-100%' }
       ],
       animation:false
     });
