@@ -853,30 +853,25 @@
   async function generateDailyReport() {
     showTyping();
     try {
-      // 始终使用 6.24 作基准对比（不覆盖，不滚动更新）
-      // 如果已存储的快照不是 6.24，强制重置为 6.24
+      // 首次使用（无快照）时设置 6.24 作为初始基准
+      // 之后每次生成日报自动保存当天快照，实现滚动对比
+      // 特殊日期自动适配：周一 vs 上周五、节后 vs 节前等（因为最后一次保存的自然是前一个工作日）
       try {
         var stored = localStorage.getItem('dailyReportSnapshot');
-        var baselineSnapshot = {
-          date: '6.24',
-          total_records: 498,
-          red_count: 443,
-          connect_count: 335,
-          activat_count: 44,
-          quality_count: 5,
-          yangguang_count: 189,
-          yangguang_connect: 131,
-          yangguang_activat: 20,
-          yangguang_quality: 2
-        };
         if (!stored) {
+          var baselineSnapshot = {
+            date: '6.24',
+            total_records: 498,
+            red_count: 443,
+            connect_count: 335,
+            activat_count: 44,
+            quality_count: 5,
+            yangguang_count: 189,
+            yangguang_connect: 131,
+            yangguang_activat: 20,
+            yangguang_quality: 2
+          };
           localStorage.setItem('dailyReportSnapshot', JSON.stringify(baselineSnapshot));
-        } else {
-          // 即使已有快照，也确保它始终是 6.24 基准（之前错误保存了当天数据则修复）
-          var parsed = JSON.parse(stored);
-          if (parsed.date !== '6.24') {
-            localStorage.setItem('dailyReportSnapshot', JSON.stringify(baselineSnapshot));
-          }
         }
       } catch(e) {}
       // 获取当前汇总数据
@@ -1002,6 +997,22 @@
 
       hideTyping();
       addMessage('assistant', report);
+
+      // 保存当天快照，作为下一天的对比基准（滚动更新）
+      // 特殊日期自动适配：周五保存后，周一自然与上周五对比
+      var snapshot = {
+        date: dateStr,
+        total_records: totalRecords,
+        red_count: totalRed,
+        connect_count: totalConnect,
+        activat_count: totalActivat,
+        quality_count: totalQuality,
+        yangguang_count: yangguangCount,
+        yangguang_connect: yangguangConnect,
+        yangguang_activat: yangguangActivat,
+        yangguang_quality: yangguangQuality
+      };
+      try { localStorage.setItem('dailyReportSnapshot', JSON.stringify(snapshot)); } catch(e) {}
 
     } catch(e) {
       hideTyping();
