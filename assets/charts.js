@@ -1091,6 +1091,170 @@
     });
   }
 
+  // ===================== 导出达成表图片 =====================
+  var exportChartBtn = document.getElementById('exportChartBtn');
+  if (exportChartBtn) {
+    exportChartBtn.addEventListener('click', function() {
+      exportAchievementImage();
+    });
+  }
+
+  function exportAchievementImage() {
+    // 计算6月新增人数（从 staticRecords 按创建日期筛选）
+    var juneNew = regions.map(function() { return 0; });
+    if (staticRecords && staticRecords.length > 0) {
+      for (var i = 0; i < staticRecords.length; i++) {
+        var rec = staticRecords[i];
+        var createDate = rec['创建日期（自动生成）'] || '';
+        var regionName = rec['战区'] || '';
+        if (createDate.indexOf('2026-06') === 0) {
+          for (var j = 0; j < regions.length; j++) {
+            if (regionName.indexOf(regions[j].replace('战区','')) >= 0) {
+              juneNew[j]++;
+              break;
+            }
+          }
+        }
+      }
+    }
+
+    var achieveRate = total.map(function(t, i) { return targets[i] > 0 ? +(t / targets[i] * 100).toFixed(1) : 0; });
+    var sumTarget = targets.reduce(function(a,b){return a+b;},0);
+    var sumTotal2 = total.reduce(function(a,b){return a+b;},0);
+    var sumJune = juneNew.reduce(function(a,b){return a+b;},0);
+    var overallRate = sumTarget > 0 ? +(sumTotal2 / sumTarget * 100).toFixed(1) : 0;
+
+    // Canvas 绘制
+    var W = 1100, H = 620;
+    var canvas = document.createElement('canvas');
+    canvas.width = W * 2; canvas.height = H * 2; // 2x 高清
+    canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+    var ctx = canvas.getContext('2d');
+    ctx.scale(2, 2);
+
+    // 背景
+    ctx.fillStyle = '#F4F7FA';
+    ctx.fillRect(0, 0, W, H);
+
+    // 标题
+    var now = new Date();
+    var dateStr = (now.getMonth()+1) + '.' + now.getDate();
+    ctx.fillStyle = '#1A2332';
+    ctx.font = 'bold 22px "Microsoft YaHei", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('各战区指标达成情况', W/2, 38);
+    ctx.font = '13px "Microsoft YaHei", sans-serif';
+    ctx.fillStyle = '#6B7D95';
+    ctx.fillText('数据日期：2026年' + dateStr + '  |  红人计划仪表盘', W/2, 60);
+
+    // 表格参数
+    var tableX = 40, tableY = 85;
+    var cols = ['战区', '千人指标', '红人库总人数', '6月新增', '达成率'];
+    var colW = [180, 160, 180, 140, 140];
+    var colX = [tableX];
+    for (var ci = 1; ci < cols.length; ci++) { colX[ci] = colX[ci-1] + colW[ci-1]; }
+    var rowH = 42;
+    var tableW = colW.reduce(function(a,b){return a+b;},0);
+
+    // 表头背景
+    ctx.fillStyle = '#2B7BD6';
+    ctx.fillRect(tableX, tableY, tableW, rowH);
+
+    // 表头文字
+    ctx.font = 'bold 14px "Microsoft YaHei", sans-serif';
+    ctx.fillStyle = '#FFFFFF';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    for (var ci = 0; ci < cols.length; ci++) {
+      ctx.fillText(cols[ci], colX[ci] + colW[ci]/2, tableY + rowH/2);
+    }
+
+    // 数据行
+    var barColors = ['#2B7BD6','#0D9488','#6366F1','#D97706','#94A3B8','#94A3B8','#059669','#7C3AED'];
+    for (var ri = 0; ri < regions.length; ri++) {
+      var ry = tableY + (ri+1) * rowH;
+      // 行背景（交替）
+      var isHighlight = (ri === 6); // 中南战区高亮
+      if (isHighlight) {
+        ctx.fillStyle = '#D1FAE5';
+      } else {
+        ctx.fillStyle = ri % 2 === 0 ? '#FFFFFF' : '#F8FAFC';
+      }
+      ctx.fillRect(tableX, ry, tableW, rowH);
+
+      // 战区名（带色块）
+      ctx.fillStyle = barColors[ri];
+      ctx.fillRect(tableX, ry, 5, rowH);
+      ctx.fillStyle = '#1A2332';
+      ctx.font = 'bold 13px "Microsoft YaHei", sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(regions[ri], colX[0] + 15, ry + rowH/2);
+
+      // 千人指标
+      ctx.fillStyle = '#6B7D95';
+      ctx.font = '13px "Microsoft YaHei", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(targets[ri], colX[1] + colW[1]/2, ry + rowH/2);
+
+      // 红人库总人数
+      ctx.fillStyle = '#1A2332';
+      ctx.font = 'bold 14px "Microsoft YaHei", sans-serif';
+      ctx.fillText(total[ri], colX[2] + colW[2]/2, ry + rowH/2);
+
+      // 6月新增
+      ctx.fillStyle = juneNew[ri] > 0 ? '#059669' : '#94A3B8';
+      ctx.font = '13px "Microsoft YaHei", sans-serif';
+      ctx.fillText(juneNew[ri], colX[3] + colW[3]/2, ry + rowH/2);
+
+      // 达成率（带进度条）
+      var rateX = colX[4] + 10;
+      var rateW = colW[4] - 20;
+      var ratePct = achieveRate[ri];
+      // 进度条背景
+      ctx.fillStyle = '#E2E8F0';
+      ctx.fillRect(rateX, ry + rowH/2 - 4, rateW, 8);
+      // 进度条填充
+      var fillW = Math.min(rateW, rateW * Math.min(ratePct / 100, 1));
+      ctx.fillStyle = ratePct >= 50 ? '#059669' : (ratePct >= 20 ? '#D97706' : '#DC2626');
+      ctx.fillRect(rateX, ry + rowH/2 - 4, fillW, 8);
+      // 达成率文字
+      ctx.fillStyle = '#1A2332';
+      ctx.font = 'bold 12px "Microsoft YaHei", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(ratePct + '%', colX[4] + colW[4]/2, ry + rowH/2 - 10);
+    }
+
+    // 汇总行
+    var sumY = tableY + (regions.length+1) * rowH;
+    ctx.fillStyle = '#1A5DB8';
+    ctx.fillRect(tableX, sumY, tableW, rowH);
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = 'bold 14px "Microsoft YaHei", sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('合计', colX[0] + 15, sumY + rowH/2);
+    ctx.textAlign = 'center';
+    ctx.fillText(sumTarget, colX[1] + colW[1]/2, sumY + rowH/2);
+    ctx.fillText(sumTotal2, colX[2] + colW[2]/2, sumY + rowH/2);
+    ctx.fillText(sumJune, colX[3] + colW[3]/2, sumY + rowH/2);
+    ctx.fillText(overallRate + '%', colX[4] + colW[4]/2, sumY + rowH/2);
+
+    // 底部备注
+    ctx.fillStyle = '#6B7D95';
+    ctx.font = '11px "Microsoft YaHei", sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('注：6月新增 = 创建日期在2026年6月的红标车主；达成率 = 红人库总人数 / 千人指标', tableX, sumY + rowH + 25);
+    ctx.fillText('中南战区为亮点战区，绿色高亮标注', tableX, sumY + rowH + 45);
+
+    // 下载
+    var link = document.createElement('a');
+    link.download = '各战区达成指标_' + dateStr + '.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+
+    // 在聊天窗口提示
+    addMessage('assistant', '已生成「各战区达成指标」图片并开始下载，请查看下载文件夹。');
+  }
+
   // ===================== FAB CHAT CONTROLS =====================
   var fabBtn = document.getElementById('fabChatBtn');
   var chatWin = document.getElementById('chatWindow');
