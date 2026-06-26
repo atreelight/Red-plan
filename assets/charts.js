@@ -1131,15 +1131,7 @@
 
     var chart = echarts.init(hiddenDiv);
 
-    // ─── 红色系配色方案（轻薄透气） ───
-    var colors = {
-      target:  '#FDA4AF',   // 千人指标 — 浅粉红柱+边框
-      targetBorder: '#FB7185',
-      actual:  '#E11D48',   // 红人库总人数 — 正红
-      juneNew: '#F97316',   // 6月新增 — 橙红
-      rate:    '#581C87'    // 达成率折线 — 深紫（与红系形成反差但协调）
-    };
-
+    // ─── 通透红色系配色 ───
     chart.setOption({
       title: {
         text: '各战区指标达成情况（' + dateStr + '）',
@@ -1189,64 +1181,51 @@
       ],
       series: [
         {
-          // 千人指标 — 浅粉轮廓柱
           name: '千人指标',
           type: 'bar',
           data: targets,
           barWidth: 22,
-          itemStyle: { color: '#FEE2E2', borderColor: '#FDA4AF', borderWidth: 1.5, borderRadius: [3,3,0,0] },
-          label: { show: true, position: 'top', fontSize: 10, color: '#FDA4AF', fontWeight: 600,
+          itemStyle: { color: '#FFF1F2', borderColor: '#FECACA', borderWidth: 1.5, borderRadius: [3,3,0,0] },
+          label: { show: true, position: 'top', fontSize: 10, color: '#FCA5A5', fontWeight: 600,
             formatter: function(p) { return p.value; } }
         },
         {
-          // 红人库总人数 — 实心正红柱
           name: '红人库总人数',
           type: 'bar',
           data: total,
           barWidth: 22,
-          itemStyle: { color: '#E11D48', borderRadius: [3,3,0,0] },
-          label: { show: true, position: 'top', fontSize: 11, color: '#BE123C', fontWeight: 700,
+          itemStyle: { color: '#DC2626', borderRadius: [3,3,0,0] },
+          label: { show: true, position: 'top', fontSize: 11, color: '#991B1B', fontWeight: 700,
             formatter: function(p) { return p.value > 0 ? p.value : ''; } }
         },
         {
-          // 6月新增人数 — 橙红柱
           name: '6月新增人数',
           type: 'bar',
           data: juneNew,
           barWidth: 22,
-          itemStyle: { color: '#F97316', borderRadius: [3,3,0,0] },
-          label: { show: true, position: 'top', fontSize: 10, color: '#C2410C', fontWeight: 600,
+          itemStyle: { color: '#FB923C', borderRadius: [3,3,0,0] },
+          label: { show: true, position: 'top', fontSize: 10, color: '#9A3412', fontWeight: 600,
             formatter: function(p) { return p.value > 0 ? p.value : ''; } }
         },
         {
-          // 总指标达成率 — 阶梯折线（step），深紫红色
           name: '总指标达成率',
           type: 'line',
           yAxisIndex: 1,
           data: achieveRate,
           step: 'end',
-          lineStyle: { color: '#581C87', width: 3 },
-          itemStyle: { color: '#581C87', borderColor: '#FFFFFF', borderWidth: 2 },
+          lineStyle: { color: '#6D28D9', width: 3 },
+          itemStyle: { color: '#6D28D9', borderColor: '#FFFFFF', borderWidth: 2 },
           symbol: 'circle', symbolSize: 9,
           label: {
-            show: true,
-            fontSize: 10,
-            color: '#581C87',
-            fontWeight: 700,
+            show: true, fontSize: 10, color: '#6D28D9', fontWeight: 700,
             backgroundColor: 'rgba(255,255,255,0.85)',
-            padding: [2,6,2,6],
-            borderRadius: 4,
+            padding: [2,6,2,6], borderRadius: 4,
             formatter: function(p) { return p.value > 0 ? p.value + '%' : ''; }
           },
-          // 中南战区深紫虚线高亮框
+          // 中南战区仅用极淡背景色高亮（无边框，无竖线）
           markArea: {
             silent: true,
-            itemStyle: {
-              color: 'rgba(88,28,135,0.04)',
-              borderColor: '#581C87',
-              borderWidth: 2,
-              borderType: 'dashed'
-            },
+            itemStyle: { color: 'rgba(220,38,38,0.05)' },
             data: [[{ xAxis: '中南战区' }, { xAxis: '中南战区' }]]
           }
         }
