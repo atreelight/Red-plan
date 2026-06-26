@@ -1100,7 +1100,8 @@
   }
 
   function exportAchievementImage() {
-    var achieveRate = total.map(function(t, i) { return targets[i] > 0 ? +(t / targets[i] * 100).toFixed(2) : 0; });
+    // 总指标达成率 = 总激活人数 / 千人指标（激活）
+    var achieveRate = activat.map(function(a, i) { return targets[i] > 0 ? +(a / targets[i] * 100).toFixed(2) : 0; });
 
     var now = new Date();
     var dateStr = (now.getMonth()+1) + '.' + now.getDate();
