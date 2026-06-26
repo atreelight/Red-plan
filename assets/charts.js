@@ -1124,81 +1124,129 @@
     var now = new Date();
     var dateStr = (now.getMonth()+1) + '.' + now.getDate();
 
-    // 创建隐藏容器
+    // 创建隐藏容器 — 加宽，为数据留足呼吸空间
     var hiddenDiv = document.createElement('div');
-    hiddenDiv.style.cssText = 'position:absolute;left:-9999px;top:0;width:1200px;height:600px;';
+    hiddenDiv.style.cssText = 'position:absolute;left:-9999px;top:0;width:1500px;height:680px;';
     document.body.appendChild(hiddenDiv);
 
     var chart = echarts.init(hiddenDiv);
+
+    // ─── 配色方案：色相分布在灰→蓝→橙→紫，不会混在一起 ───
+    var colors = {
+      target:  '#94A3B8',   // 千人指标 — 中性灰蓝（背景感）
+      actual:  '#2563EB',   // 红人库总人数 — 正蓝
+      juneNew: '#F59E0B',   // 6月新增 — 琥珀色（暖色跳出）
+      rate:    '#8B5CF6'    // 达成率折线 — 紫色
+    };
 
     chart.setOption({
       title: {
         text: '各战区指标达成情况（' + dateStr + '）',
         left: 'center',
-        top: 15,
-        textStyle: { fontSize: 18, fontWeight: 'bold', color: '#1A2332', fontFamily: 'Microsoft YaHei, sans-serif' }
+        top: 18,
+        textStyle: { fontSize: 20, fontWeight: 700, color: '#1E293B', fontFamily: '"PingFang SC","Microsoft YaHei",sans-serif' }
       },
-      tooltip: { trigger: 'axis', show: false },
+      tooltip: { show: false },
       legend: {
         data: ['千人指标', '红人库总人数', '6月新增人数', '总指标达成率'],
-        bottom: 10,
-        textStyle: { fontSize: 12, color: '#6B7D95' },
-        itemWidth: 12, itemHeight: 12
+        bottom: 12,
+        textStyle: { fontSize: 12, color: '#64748B' },
+        itemWidth: 14, itemHeight: 14,
+        icon: 'roundRect'
       },
-      grid: { left: 60, right: 70, top: 60, bottom: 60 },
+      grid: { left: 72, right: 82, top: 58, bottom: 68 },
       xAxis: {
         type: 'category',
         data: regions,
-        axisLabel: { color: '#6B7D95', fontSize: 11, rotate: 15 },
+        axisLabel: { color: '#475569', fontSize: 11, fontWeight: 600, rotate: 0 },
+        axisTick: { show: false },
         axisLine: { lineStyle: { color: '#E2E8F0' } }
       },
       yAxis: [
         {
           type: 'value',
           name: '人数',
+          nameTextStyle: { color: '#94A3B8', fontSize: 11, fontWeight: 500 },
           min: 0,
           max: 400,
-          axisLabel: { color: '#6B7D95', fontSize: 10 },
-          splitLine: { lineStyle: { color: '#E2E8F0', type: 'dashed' } }
+          axisLabel: { color: '#94A3B8', fontSize: 10 },
+          splitLine: { lineStyle: { color: '#F1F5F9', width: 1 } },
+          axisLine: { show: false },
+          axisTick: { show: false }
         },
         {
           type: 'value',
           name: '达成率',
+          nameTextStyle: { color: '#94A3B8', fontSize: 11, fontWeight: 500 },
           min: 0,
           max: 200,
-          axisLabel: { color: '#6B7D95', fontSize: 10, formatter: '{value}%' },
-          splitLine: { show: false }
+          axisLabel: { color: '#94A3B8', fontSize: 10, formatter: '{value}%' },
+          splitLine: { show: false },
+          axisLine: { show: false },
+          axisTick: { show: false }
         }
       ],
       series: [
         {
-          name: '千人指标', type: 'bar', data: targets,
-          itemStyle: { color: '#2B4C8C' }, barMaxWidth: 28,
-          label: { show: true, position: 'top', fontSize: 10, color: '#2B4C8C', fontWeight: 600 }
+          // 千人指标 — 半透明轮廓柱，视觉上作为"背景标尺"
+          name: '千人指标',
+          type: 'bar',
+          data: targets,
+          barWidth: 22,
+          itemStyle: { color: '#E2E8F0', borderColor: '#94A3B8', borderWidth: 1.5, borderRadius: [3,3,0,0] },
+          label: { show: true, position: 'top', fontSize: 10, color: '#94A3B8', fontWeight: 600,
+            formatter: function(p) { return p.value; } }
         },
         {
-          name: '红人库总人数', type: 'bar', data: total,
-          itemStyle: { color: '#5B9BD5' }, barMaxWidth: 28,
-          label: { show: true, position: 'top', fontSize: 10, color: '#3B82F6', fontWeight: 600 }
+          // 红人库总人数 — 实心蓝柱
+          name: '红人库总人数',
+          type: 'bar',
+          data: total,
+          barWidth: 22,
+          itemStyle: { color: '#2563EB', borderRadius: [3,3,0,0] },
+          label: { show: true, position: 'top', fontSize: 11, color: '#1E40AF', fontWeight: 700,
+            formatter: function(p) { return p.value > 0 ? p.value : ''; } }
         },
         {
-          name: '6月新增人数', type: 'bar', data: juneNew,
-          itemStyle: { color: '#A78BFA' }, barMaxWidth: 28,
-          label: { show: true, position: 'top', fontSize: 10, color: '#7C3AED', fontWeight: 600 }
+          // 6月新增人数 — 暖色琥珀柱
+          name: '6月新增人数',
+          type: 'bar',
+          data: juneNew,
+          barWidth: 22,
+          itemStyle: { color: '#F59E0B', borderRadius: [3,3,0,0] },
+          label: { show: true, position: 'top', fontSize: 10, color: '#B45309', fontWeight: 600,
+            formatter: function(p) { return p.value > 0 ? p.value : ''; } }
         },
         {
-          name: '总指标达成率', type: 'line', yAxisIndex: 1, data: achieveRate,
-          lineStyle: { color: '#C4B5FD', width: 2.5 },
-          itemStyle: { color: '#8B5CF6' },
-          symbol: 'circle', symbolSize: 8,
+          // 总指标达成率 — 紫红色折线，data points 显眼
+          name: '总指标达成率',
+          type: 'line',
+          yAxisIndex: 1,
+          data: achieveRate,
+          lineStyle: { color: '#D946EF', width: 3 },
+          itemStyle: { color: '#D946EF', borderColor: '#FFFFFF', borderWidth: 2 },
+          symbol: 'circle', symbolSize: 9,
+          smooth: false,
           label: {
-            show: true, fontSize: 10, color: '#7C3AED', fontWeight: 600,
-            formatter: function(p) { return p.value > 0 ? p.value.toFixed(2) + '%' : ''; }
+            show: true,
+            fontSize: 10,
+            color: '#A21CAF',
+            fontWeight: 700,
+            backgroundColor: 'rgba(255,255,255,0.85)',
+            padding: [2,6,2,6],
+            borderRadius: 4,
+            formatter: function(p) { return p.value > 0 ? p.value + '%' : ''; }
           },
+          // 中南战区紫色虚线高亮框
           markArea: {
             silent: true,
-            itemStyle: { color: 'rgba(139,92,246,0.06)', borderColor: '#8B5CF6', borderWidth: 2, borderType: 'dashed' },
-            data: [[ { xAxis: '中南战区' }, { xAxis: '中南战区' } ]]
+            itemStyle: {
+              color: 'rgba(168,85,247,0.04)',
+              borderColor: '#A855F7',
+              borderWidth: 2,
+              borderType: 'dashed'
+            },
+            data: [[{ xAxis: '中南战区' }, { xAxis: '中南战区' }]]
           }
         }
       ],
