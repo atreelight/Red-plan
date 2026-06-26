@@ -1131,7 +1131,7 @@
 
     var chart = echarts.init(hiddenDiv);
 
-    // ─── 通透红色系配色 ───
+    // ─── 配色：千人指标冷灰底、红+橙柱、深青阶梯线 ───
     chart.setOption({
       title: {
         text: '各战区指标达成情况（' + dateStr + '）',
@@ -1182,51 +1182,37 @@
       series: [
         {
           name: '千人指标',
-          type: 'bar',
-          data: targets,
-          barWidth: 22,
-          itemStyle: { color: '#FFF1F2', borderColor: '#FECACA', borderWidth: 1.5, borderRadius: [3,3,0,0] },
-          label: { show: true, position: 'top', fontSize: 10, color: '#FCA5A5', fontWeight: 600,
+          type: 'bar', data: targets, barWidth: 22,
+          itemStyle: { color: '#F8FAFC', borderColor: '#CBD5E1', borderWidth: 1.5, borderRadius: [3,3,0,0] },
+          label: { show: true, position: 'top', fontSize: 10, color: '#94A3B8', fontWeight: 600,
             formatter: function(p) { return p.value; } }
         },
         {
           name: '红人库总人数',
-          type: 'bar',
-          data: total,
-          barWidth: 22,
+          type: 'bar', data: total, barWidth: 22,
           itemStyle: { color: '#DC2626', borderRadius: [3,3,0,0] },
           label: { show: true, position: 'top', fontSize: 11, color: '#991B1B', fontWeight: 700,
             formatter: function(p) { return p.value > 0 ? p.value : ''; } }
         },
         {
           name: '6月新增人数',
-          type: 'bar',
-          data: juneNew,
-          barWidth: 22,
+          type: 'bar', data: juneNew, barWidth: 22,
           itemStyle: { color: '#FB923C', borderRadius: [3,3,0,0] },
           label: { show: true, position: 'top', fontSize: 10, color: '#9A3412', fontWeight: 600,
             formatter: function(p) { return p.value > 0 ? p.value : ''; } }
         },
         {
           name: '总指标达成率',
-          type: 'line',
-          yAxisIndex: 1,
-          data: achieveRate,
+          type: 'line', yAxisIndex: 1, data: achieveRate,
           step: 'end',
-          lineStyle: { color: '#6D28D9', width: 3 },
-          itemStyle: { color: '#6D28D9', borderColor: '#FFFFFF', borderWidth: 2 },
+          lineStyle: { color: '#0D9488', width: 3 },
+          itemStyle: { color: '#0D9488', borderColor: '#FFFFFF', borderWidth: 2 },
           symbol: 'circle', symbolSize: 9,
           label: {
-            show: true, fontSize: 10, color: '#6D28D9', fontWeight: 700,
+            show: true, fontSize: 10, color: '#0D9488', fontWeight: 700,
             backgroundColor: 'rgba(255,255,255,0.85)',
             padding: [2,6,2,6], borderRadius: 4,
             formatter: function(p) { return p.value > 0 ? p.value + '%' : ''; }
-          },
-          // 中南战区仅用极淡背景色高亮（无边框，无竖线）
-          markArea: {
-            silent: true,
-            itemStyle: { color: 'rgba(220,38,38,0.05)' },
-            data: [[{ xAxis: '中南战区' }, { xAxis: '中南战区' }]]
           }
         }
       ],
