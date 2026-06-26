@@ -1120,7 +1120,7 @@
       },
       tooltip: { show: false },
       legend: {
-        data: ['千人指标（激活）', '总建联人数', '总激活人数', '总指标达成率'],
+        data: ['总建联人数', '千人指标（激活）', '总激活人数', '总指标达成率'],
         bottom: 12,
         textStyle: { fontSize: 12, color: '#64748B' },
         itemWidth: 14, itemHeight: 14, icon: 'roundRect'
@@ -1152,18 +1152,18 @@
       ],
       series: [
         {
-          name: '千人指标（激活）',
-          type: 'bar', data: targets, barWidth: 18,
-          itemStyle: { color: '#8896AE', borderRadius: [3,3,0,0] },
-          label: { show: true, position: 'top', fontSize: 10, color: '#8896AE', fontWeight: 600,
-            formatter: function(p) { return p.value; } }
-        },
-        {
           name: '总建联人数',
           type: 'bar', data: connect, barWidth: 18,
           itemStyle: { color: '#D4596B', borderRadius: [3,3,0,0] },
           label: { show: true, position: 'top', fontSize: 11, color: '#B13E4F', fontWeight: 700,
             formatter: function(p) { return p.value > 0 ? p.value : ''; } }
+        },
+        {
+          name: '千人指标（激活）',
+          type: 'bar', data: targets, barWidth: 18,
+          itemStyle: { color: '#8896AE', borderRadius: [3,3,0,0] },
+          label: { show: true, position: 'top', fontSize: 10, color: '#8896AE', fontWeight: 600,
+            formatter: function(p) { return p.value; } }
         },
         {
           name: '总激活人数',
