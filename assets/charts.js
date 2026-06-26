@@ -1100,103 +1100,73 @@
   }
 
   function exportAchievementImage() {
-    // 计算6月新增人数（从 staticRecords 按创建日期筛选）
-    var juneNew = regions.map(function() { return 0; });
-    if (staticRecords && staticRecords.length > 0) {
-      for (var i = 0; i < staticRecords.length; i++) {
-        var rec = staticRecords[i];
-        var createDate = rec['创建日期（自动生成）'] || '';
-        var regionName = rec['战区'] || '';
-        if (createDate.indexOf('2026-06') === 0) {
-          for (var j = 0; j < regions.length; j++) {
-            if (regionName.indexOf(regions[j].replace('战区','')) >= 0) {
-              juneNew[j]++;
-              break;
-            }
-          }
-        }
-      }
-    }
-
-    // 达成率（保留两位小数）
     var achieveRate = total.map(function(t, i) { return targets[i] > 0 ? +(t / targets[i] * 100).toFixed(2) : 0; });
 
     var now = new Date();
     var dateStr = (now.getMonth()+1) + '.' + now.getDate();
 
-    // 创建隐藏容器 — 加宽，为数据留足呼吸空间
     var hiddenDiv = document.createElement('div');
     hiddenDiv.style.cssText = 'position:absolute;left:-9999px;top:0;width:1500px;height:680px;';
     document.body.appendChild(hiddenDiv);
 
     var chart = echarts.init(hiddenDiv);
 
-    // ─── 配色：千人指标冷灰底、红+橙柱、深青阶梯线 ───
     chart.setOption({
       title: {
         text: '各战区指标达成情况（' + dateStr + '）',
-        left: 'center',
-        top: 18,
+        left: 'center', top: 18,
         textStyle: { fontSize: 20, fontWeight: 700, color: '#1E293B', fontFamily: '"PingFang SC","Microsoft YaHei",sans-serif' }
       },
       tooltip: { show: false },
       legend: {
-        data: ['千人指标', '红人库总人数', '6月新增人数', '总指标达成率'],
+        data: ['千人指标（激活）', '总建联人数', '总激活人数', '总指标达成率'],
         bottom: 12,
         textStyle: { fontSize: 12, color: '#64748B' },
-        itemWidth: 14, itemHeight: 14,
-        icon: 'roundRect'
+        itemWidth: 14, itemHeight: 14, icon: 'roundRect'
       },
       grid: { left: 72, right: 82, top: 58, bottom: 68 },
       xAxis: {
-        type: 'category',
-        data: regions,
+        type: 'category', data: regions,
         axisLabel: { color: '#475569', fontSize: 11, fontWeight: 600, align: 'center' },
         axisTick: { show: false },
         axisLine: { lineStyle: { color: '#E2E8F0' } }
       },
       yAxis: [
         {
-          type: 'value',
-          name: '人数',
+          type: 'value', name: '人数',
           nameTextStyle: { color: '#94A3B8', fontSize: 11, fontWeight: 500 },
-          min: 0,
-          max: 400,
+          min: 0, max: 400,
           axisLabel: { color: '#94A3B8', fontSize: 10 },
           splitLine: { lineStyle: { color: '#F1F5F9', width: 1 } },
-          axisLine: { show: false },
-          axisTick: { show: false }
+          axisLine: { show: false }, axisTick: { show: false }
         },
         {
-          type: 'value',
-          name: '达成率',
+          type: 'value', name: '达成率',
           nameTextStyle: { color: '#94A3B8', fontSize: 11, fontWeight: 500 },
-          min: 0,
-          max: 200,
+          min: 0, max: 200,
           axisLabel: { color: '#94A3B8', fontSize: 10, formatter: '{value}%' },
           splitLine: { show: false },
-          axisLine: { show: false },
-          axisTick: { show: false }
+          axisLine: { show: false }, axisTick: { show: false }
         }
       ],
       series: [
         {
-          name: '千人指标',
+          name: '千人指标（激活）',
           type: 'bar', data: targets, barWidth: 18,
           itemStyle: { color: '#8896AE', borderRadius: [3,3,0,0] },
           label: { show: true, position: 'top', fontSize: 10, color: '#8896AE', fontWeight: 600,
             formatter: function(p) { return p.value; } }
         },
         {
-          name: '红人库总人数',
-          type: 'bar', data: total, barWidth: 18,
+          name: '总建联人数',
+          type: 'bar', data: connect, barWidth: 18,
           itemStyle: { color: '#D4596B', borderRadius: [3,3,0,0] },
           label: { show: true, position: 'top', fontSize: 11, color: '#B13E4F', fontWeight: 700,
             formatter: function(p) { return p.value > 0 ? p.value : ''; } }
         },
         {
-          name: '6月新增人数',
-          type: 'bar', data: juneNew, barWidth: 18,
+          name: '总激活人数',
+          type: 'bar', data: activat, barWidth: 18,
           itemStyle: { color: '#E8955B', borderRadius: [3,3,0,0] },
           label: { show: true, position: 'top', fontSize: 10, color: '#C5703A', fontWeight: 600,
             formatter: function(p) { return p.value > 0 ? p.value : ''; } }
