@@ -1118,141 +1118,110 @@
       }
     }
 
-    var achieveRate = total.map(function(t, i) { return targets[i] > 0 ? +(t / targets[i] * 100).toFixed(1) : 0; });
-    var sumTarget = targets.reduce(function(a,b){return a+b;},0);
-    var sumTotal2 = total.reduce(function(a,b){return a+b;},0);
-    var sumJune = juneNew.reduce(function(a,b){return a+b;},0);
-    var overallRate = sumTarget > 0 ? +(sumTotal2 / sumTarget * 100).toFixed(1) : 0;
+    // 达成率（保留两位小数）
+    var achieveRate = total.map(function(t, i) { return targets[i] > 0 ? +(t / targets[i] * 100).toFixed(2) : 0; });
 
-    // Canvas 绘制
-    var W = 1100, H = 620;
-    var canvas = document.createElement('canvas');
-    canvas.width = W * 2; canvas.height = H * 2; // 2x 高清
-    canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
-    var ctx = canvas.getContext('2d');
-    ctx.scale(2, 2);
-
-    // 背景
-    ctx.fillStyle = '#F4F7FA';
-    ctx.fillRect(0, 0, W, H);
-
-    // 标题
     var now = new Date();
     var dateStr = (now.getMonth()+1) + '.' + now.getDate();
-    ctx.fillStyle = '#1A2332';
-    ctx.font = 'bold 22px "Microsoft YaHei", sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('各战区指标达成情况', W/2, 38);
-    ctx.font = '13px "Microsoft YaHei", sans-serif';
-    ctx.fillStyle = '#6B7D95';
-    ctx.fillText('数据日期：2026年' + dateStr + '  |  红人计划仪表盘', W/2, 60);
 
-    // 表格参数
-    var tableX = 40, tableY = 85;
-    var cols = ['战区', '千人指标', '红人库总人数', '6月新增', '达成率'];
-    var colW = [180, 160, 180, 140, 140];
-    var colX = [tableX];
-    for (var ci = 1; ci < cols.length; ci++) { colX[ci] = colX[ci-1] + colW[ci-1]; }
-    var rowH = 42;
-    var tableW = colW.reduce(function(a,b){return a+b;},0);
+    // 创建隐藏容器
+    var hiddenDiv = document.createElement('div');
+    hiddenDiv.style.cssText = 'position:absolute;left:-9999px;top:0;width:1200px;height:600px;';
+    document.body.appendChild(hiddenDiv);
 
-    // 表头背景
-    ctx.fillStyle = '#2B7BD6';
-    ctx.fillRect(tableX, tableY, tableW, rowH);
+    var chart = echarts.init(hiddenDiv);
 
-    // 表头文字
-    ctx.font = 'bold 14px "Microsoft YaHei", sans-serif';
-    ctx.fillStyle = '#FFFFFF';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    for (var ci = 0; ci < cols.length; ci++) {
-      ctx.fillText(cols[ci], colX[ci] + colW[ci]/2, tableY + rowH/2);
-    }
+    chart.setOption({
+      title: {
+        text: '各战区指标达成情况（' + dateStr + '）',
+        left: 'center',
+        top: 15,
+        textStyle: { fontSize: 18, fontWeight: 'bold', color: '#1A2332', fontFamily: 'Microsoft YaHei, sans-serif' }
+      },
+      tooltip: { trigger: 'axis', show: false },
+      legend: {
+        data: ['千人指标', '红人库总人数', '6月新增人数', '总指标达成率'],
+        bottom: 10,
+        textStyle: { fontSize: 12, color: '#6B7D95' },
+        itemWidth: 12, itemHeight: 12
+      },
+      grid: { left: 60, right: 70, top: 60, bottom: 60 },
+      xAxis: {
+        type: 'category',
+        data: regions,
+        axisLabel: { color: '#6B7D95', fontSize: 11, rotate: 15 },
+        axisLine: { lineStyle: { color: '#E2E8F0' } }
+      },
+      yAxis: [
+        {
+          type: 'value',
+          name: '人数',
+          min: 0,
+          max: 400,
+          axisLabel: { color: '#6B7D95', fontSize: 10 },
+          splitLine: { lineStyle: { color: '#E2E8F0', type: 'dashed' } }
+        },
+        {
+          type: 'value',
+          name: '达成率',
+          min: 0,
+          max: 200,
+          axisLabel: { color: '#6B7D95', fontSize: 10, formatter: '{value}%' },
+          splitLine: { show: false }
+        }
+      ],
+      series: [
+        {
+          name: '千人指标', type: 'bar', data: targets,
+          itemStyle: { color: '#2B4C8C' }, barMaxWidth: 28,
+          label: { show: true, position: 'top', fontSize: 10, color: '#2B4C8C', fontWeight: 600 }
+        },
+        {
+          name: '红人库总人数', type: 'bar', data: total,
+          itemStyle: { color: '#5B9BD5' }, barMaxWidth: 28,
+          label: { show: true, position: 'top', fontSize: 10, color: '#3B82F6', fontWeight: 600 }
+        },
+        {
+          name: '6月新增人数', type: 'bar', data: juneNew,
+          itemStyle: { color: '#A78BFA' }, barMaxWidth: 28,
+          label: { show: true, position: 'top', fontSize: 10, color: '#7C3AED', fontWeight: 600 }
+        },
+        {
+          name: '总指标达成率', type: 'line', yAxisIndex: 1, data: achieveRate,
+          lineStyle: { color: '#C4B5FD', width: 2.5 },
+          itemStyle: { color: '#8B5CF6' },
+          symbol: 'circle', symbolSize: 8,
+          label: {
+            show: true, fontSize: 10, color: '#7C3AED', fontWeight: 600,
+            formatter: function(p) { return p.value > 0 ? p.value.toFixed(2) + '%' : ''; }
+          },
+          markArea: {
+            silent: true,
+            itemStyle: { color: 'rgba(139,92,246,0.06)', borderColor: '#8B5CF6', borderWidth: 2, borderType: 'dashed' },
+            data: [[ { xAxis: '中南战区' }, { xAxis: '中南战区' } ]]
+          }
+        }
+      ],
+      animation: false
+    });
 
-    // 数据行
-    var barColors = ['#2B7BD6','#0D9488','#6366F1','#D97706','#94A3B8','#94A3B8','#059669','#7C3AED'];
-    for (var ri = 0; ri < regions.length; ri++) {
-      var ry = tableY + (ri+1) * rowH;
-      // 行背景（交替）
-      var isHighlight = (ri === 6); // 中南战区高亮
-      if (isHighlight) {
-        ctx.fillStyle = '#D1FAE5';
-      } else {
-        ctx.fillStyle = ri % 2 === 0 ? '#FFFFFF' : '#F8FAFC';
-      }
-      ctx.fillRect(tableX, ry, tableW, rowH);
+    // 导出图片
+    var url = chart.getDataURL({
+      type: 'png',
+      pixelRatio: 2,
+      backgroundColor: '#FFFFFF'
+    });
 
-      // 战区名（带色块）
-      ctx.fillStyle = barColors[ri];
-      ctx.fillRect(tableX, ry, 5, rowH);
-      ctx.fillStyle = '#1A2332';
-      ctx.font = 'bold 13px "Microsoft YaHei", sans-serif';
-      ctx.textAlign = 'left';
-      ctx.fillText(regions[ri], colX[0] + 15, ry + rowH/2);
-
-      // 千人指标
-      ctx.fillStyle = '#6B7D95';
-      ctx.font = '13px "Microsoft YaHei", sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText(targets[ri], colX[1] + colW[1]/2, ry + rowH/2);
-
-      // 红人库总人数
-      ctx.fillStyle = '#1A2332';
-      ctx.font = 'bold 14px "Microsoft YaHei", sans-serif';
-      ctx.fillText(total[ri], colX[2] + colW[2]/2, ry + rowH/2);
-
-      // 6月新增
-      ctx.fillStyle = juneNew[ri] > 0 ? '#059669' : '#94A3B8';
-      ctx.font = '13px "Microsoft YaHei", sans-serif';
-      ctx.fillText(juneNew[ri], colX[3] + colW[3]/2, ry + rowH/2);
-
-      // 达成率（带进度条）
-      var rateX = colX[4] + 10;
-      var rateW = colW[4] - 20;
-      var ratePct = achieveRate[ri];
-      // 进度条背景
-      ctx.fillStyle = '#E2E8F0';
-      ctx.fillRect(rateX, ry + rowH/2 - 4, rateW, 8);
-      // 进度条填充
-      var fillW = Math.min(rateW, rateW * Math.min(ratePct / 100, 1));
-      ctx.fillStyle = ratePct >= 50 ? '#059669' : (ratePct >= 20 ? '#D97706' : '#DC2626');
-      ctx.fillRect(rateX, ry + rowH/2 - 4, fillW, 8);
-      // 达成率文字
-      ctx.fillStyle = '#1A2332';
-      ctx.font = 'bold 12px "Microsoft YaHei", sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText(ratePct + '%', colX[4] + colW[4]/2, ry + rowH/2 - 10);
-    }
-
-    // 汇总行
-    var sumY = tableY + (regions.length+1) * rowH;
-    ctx.fillStyle = '#1A5DB8';
-    ctx.fillRect(tableX, sumY, tableW, rowH);
-    ctx.fillStyle = '#FFFFFF';
-    ctx.font = 'bold 14px "Microsoft YaHei", sans-serif';
-    ctx.textAlign = 'left';
-    ctx.fillText('合计', colX[0] + 15, sumY + rowH/2);
-    ctx.textAlign = 'center';
-    ctx.fillText(sumTarget, colX[1] + colW[1]/2, sumY + rowH/2);
-    ctx.fillText(sumTotal2, colX[2] + colW[2]/2, sumY + rowH/2);
-    ctx.fillText(sumJune, colX[3] + colW[3]/2, sumY + rowH/2);
-    ctx.fillText(overallRate + '%', colX[4] + colW[4]/2, sumY + rowH/2);
-
-    // 底部备注
-    ctx.fillStyle = '#6B7D95';
-    ctx.font = '11px "Microsoft YaHei", sans-serif';
-    ctx.textAlign = 'left';
-    ctx.fillText('注：6月新增 = 创建日期在2026年6月的红标车主；达成率 = 红人库总人数 / 千人指标', tableX, sumY + rowH + 25);
-    ctx.fillText('中南战区为亮点战区，绿色高亮标注', tableX, sumY + rowH + 45);
-
-    // 下载
     var link = document.createElement('a');
     link.download = '各战区达成指标_' + dateStr + '.png';
-    link.href = canvas.toDataURL('image/png');
+    link.href = url;
     link.click();
 
-    // 在聊天窗口提示
-    addMessage('assistant', '已生成「各战区达成指标」图片并开始下载，请查看下载文件夹。');
+    // 清理
+    chart.dispose();
+    document.body.removeChild(hiddenDiv);
+
+    addMessage('assistant', '已生成「各战区指标达成情况」图表图片并开始下载，请查看下载文件夹。');
   }
 
   // ===================== FAB CHAT CONTROLS =====================
