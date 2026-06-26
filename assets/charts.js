@@ -1182,29 +1182,29 @@
       series: [
         {
           name: '千人指标',
-          type: 'bar', data: targets, barWidth: 22,
-          itemStyle: { color: '#F8FAFC', borderColor: '#CBD5E1', borderWidth: 1.5, borderRadius: [3,3,0,0] },
-          label: { show: true, position: 'top', fontSize: 10, color: '#94A3B8', fontWeight: 600,
+          type: 'bar', data: targets, barWidth: 18,
+          itemStyle: { color: '#8896AE', borderRadius: [3,3,0,0] },
+          label: { show: true, position: 'top', fontSize: 10, color: '#8896AE', fontWeight: 600,
             formatter: function(p) { return p.value; } }
         },
         {
           name: '红人库总人数',
-          type: 'bar', data: total, barWidth: 22,
-          itemStyle: { color: '#DC2626', borderRadius: [3,3,0,0] },
-          label: { show: true, position: 'top', fontSize: 11, color: '#991B1B', fontWeight: 700,
+          type: 'bar', data: total, barWidth: 18,
+          itemStyle: { color: '#D4596B', borderRadius: [3,3,0,0] },
+          label: { show: true, position: 'top', fontSize: 11, color: '#B13E4F', fontWeight: 700,
             formatter: function(p) { return p.value > 0 ? p.value : ''; } }
         },
         {
           name: '6月新增人数',
-          type: 'bar', data: juneNew, barWidth: 22,
-          itemStyle: { color: '#FB923C', borderRadius: [3,3,0,0] },
-          label: { show: true, position: 'top', fontSize: 10, color: '#9A3412', fontWeight: 600,
+          type: 'bar', data: juneNew, barWidth: 18,
+          itemStyle: { color: '#E8955B', borderRadius: [3,3,0,0] },
+          label: { show: true, position: 'top', fontSize: 10, color: '#C5703A', fontWeight: 600,
             formatter: function(p) { return p.value > 0 ? p.value : ''; } }
         },
         {
           name: '总指标达成率',
           type: 'line', yAxisIndex: 1, data: achieveRate,
-          step: 'end',
+          step: 'middle',
           lineStyle: { color: '#0D9488', width: 3 },
           itemStyle: { color: '#0D9488', borderColor: '#FFFFFF', borderWidth: 2 },
           symbol: 'circle', symbolSize: 9,
