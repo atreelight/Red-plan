@@ -78,6 +78,46 @@
     }).join('');
   }
 
+  // ===================== YANGGUANG SPOTLIGHT (扬光专项) =====================
+  // 从 staticRecords 中统计扬光车主数据（模糊匹配：扬光/杨光/阳光）
+  var ygStats = { count: 0, connect: 0, activat: 0, quality: 0 };
+
+  function computeYangguang() {
+    ygStats = { count: 0, connect: 0, activat: 0, quality: 0 };
+    if (!staticRecords || staticRecords.length === 0) return;
+    for (var i = 0; i < staticRecords.length; i++) {
+      var car = staticRecords[i]['车型'] || '';
+      if (car.indexOf('扬光') >= 0 || car.indexOf('杨光') >= 0 || car.indexOf('阳光') >= 0) {
+        ygStats.count++;
+        if (staticRecords[i]['是否添加企微（中台复核）'] === '是') ygStats.connect++;
+        if (staticRecords[i]['是否激活'] === '是') ygStats.activat++;
+        if (staticRecords[i]['是否优质'] === '是') ygStats.quality++;
+      }
+    }
+  }
+
+  function buildYangguangBar() {
+    var el = document.getElementById('yangguangBar');
+    if (!el) return;
+    computeYangguang();
+    var ygConnRate = ygStats.count > 0 ? +(ygStats.connect / ygStats.count * 100).toFixed(1) : 0;
+    var ygActRate  = ygStats.count > 0 ? +(ygStats.activat / ygStats.count * 100).toFixed(1) : 0;
+    var ygQualRate = ygStats.count > 0 ? +(ygStats.quality / ygStats.count * 100).toFixed(1) : 0;
+    var ygPct = sumTotal > 0 ? (ygStats.count / sumTotal * 100).toFixed(1) : 0;
+    var items = [
+      { label: '扬光车主',    value: ygStats.count + ' 人',  sub: '占红人库 ' + ygPct + '%', highlight: true },
+      { label: '建联率',      value: ygConnRate + '%',       sub: '已建联 ' + ygStats.connect + ' 人' },
+      { label: '激活率',      value: ygActRate + '%',        sub: '已激活 ' + ygStats.activat + ' 人' },
+      { label: '优质率',      value: ygQualRate + '%',       sub: '优质 ' + ygStats.quality + ' 人' }
+    ];
+    el.innerHTML = items.map(function(it){
+      var hCls = it.highlight ? ' spotlight' : '';
+      return '<div class="insight-card'+hCls+'"><div class="ic-label">'+it.label+'</div>' +
+        '<div class="ic-value">'+it.value+'</div>' +
+        '<div class="ic-sub">'+it.sub+'</div></div>';
+    }).join('');
+  }
+
   // ===================== INSIGHTS (中南战区) =====================
   function buildInsights() {
     var zhongnanIdx = 6;
@@ -300,6 +340,7 @@
     computeRates();
     buildKPI();
     buildOverallRates();
+    buildYangguangBar();
     buildInsights();
     buildChart1();
     buildChart2();
@@ -401,11 +442,14 @@
       })
       .catch(function(){});
 
-    // 预加载原始记录（供前端查询用）
+    // 预加载原始记录（供前端查询用 + 扬光专项统计）
     fetch(STATIC_API + 'raw-records.json')
       .then(function(r){ return r.json(); })
       .then(function(data){
-        if (data.ok) { staticRecords = data.records; }
+        if (data.ok) {
+          staticRecords = data.records;
+          buildYangguangBar(); // 原始记录加载后刷新扬光数据
+        }
       })
       .catch(function(){});
   }
