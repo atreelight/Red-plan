@@ -420,7 +420,8 @@
 
   // ─── 静态模式：从 api/ 目录加载预计算 JSON ───
   function loadStaticData() {
-    fetch(STATIC_API + 'summary.json')
+    var cacheBust = '?t=' + Date.now();
+    fetch(STATIC_API + 'summary.json' + cacheBust)
       .then(function(r){ return r.json(); })
       .then(function(data){
         if (data.ok && data.stats) {
@@ -435,7 +436,7 @@
       });
 
     // 同时获取数据时间
-    fetch(STATIC_API + 'data-info.json')
+    fetch(STATIC_API + 'data-info.json' + cacheBust)
       .then(function(r){ return r.json(); })
       .then(function(info){
         if (info.ok && info.fetched_at) { setUpdateTime(info.fetched_at); }
@@ -443,7 +444,7 @@
       .catch(function(){});
 
     // 预加载原始记录（供前端查询用 + 扬光专项统计）
-    fetch(STATIC_API + 'raw-records.json')
+    fetch(STATIC_API + 'raw-records.json' + cacheBust)
       .then(function(r){ return r.json(); })
       .then(function(data){
         if (data.ok) {
@@ -592,7 +593,7 @@
     // 静态模式但记录未加载，尝试 fetch
     if (isStaticHost) {
       try {
-        var resp = await fetch(STATIC_API + 'raw-records.json');
+        var resp = await fetch(STATIC_API + 'raw-records.json?t=' + Date.now());
         var data = await resp.json();
         if (data.ok) {
           staticRecords = data.records;
@@ -635,7 +636,7 @@
     // 静态模式
     if (isStaticHost) {
       try {
-        var resp = await fetch(STATIC_API + 'summary.json');
+        var resp = await fetch(STATIC_API + 'summary.json?t=' + Date.now());
         var data = await resp.json();
         if (data.ok && data.text) { return data.text; }
       } catch (e) {}
@@ -678,7 +679,7 @@
     // 确保记录已加载
     if (!staticRecords) {
       try {
-        var resp = await fetch(STATIC_API + 'raw-records.json');
+        var resp = await fetch(STATIC_API + 'raw-records.json?t=' + Date.now());
         var data = await resp.json();
         if (data.ok) { staticRecords = data.records; }
       } catch (e) { return null; }
