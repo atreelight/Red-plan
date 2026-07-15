@@ -489,11 +489,10 @@
   loadLiveData();
 
   // ===================== AI CHAT + LIVE LARK QUERY =====================
-  // API 密钥：优先从本地 config.local.js 读取，否则用 base64 编码默认值
-  var API_KEY_ENCODED = 'c2stZmIzYjkzNGNmMTYyNGE4M2I4OGY4ZGFiM2M4NWZhYWM=';
+  // API 密钥仅从本地 config.local.js 读取，不嵌入代码，不推 GitHub
   var API_KEY = (typeof window.AI_API_KEY !== 'undefined' && window.AI_API_KEY)
                 ? window.AI_API_KEY
-                : atob(API_KEY_ENCODED);
+                : '';
   var API_URL = (typeof window.AI_API_URL !== 'undefined' && window.AI_API_URL)
                 ? window.AI_API_URL
                 : 'https://api.deepseek.com/v1/chat/completions';
@@ -799,6 +798,13 @@
     var text = chatInput.value.trim();
     if (!text) return;
 
+    // 安全检查：无 API 密钥时拒绝请求并提示
+    if (!API_KEY) {
+      addMessage('user', text);
+      addMessage('assistant', 'AI 助手未配置 API 密钥。请在本地 config.local.js 中配置后使用。数据查询、图表、日报等功能不受影响。');
+      return;
+    }
+
     chatInput.value = '';
     chatBtn.disabled = true;
     addMessage('user', text);
@@ -902,6 +908,10 @@
 
   // ─── 生成日报 ───
   async function generateDailyReport() {
+    if (!API_KEY) {
+      addMessage('assistant', 'AI 助手未配置 API 密钥，日报功能需要密钥才能生成。请在本地 config.local.js 中配置后使用。');
+      return;
+    }
     showTyping();
     try {
       // 按日期存储快照（dailyData_6.24、dailyData_6.25...）
