@@ -55,7 +55,7 @@
       "referral": 0
     },
     "中南战区": {
-      "total": 394,
+      "total": 402,
       "connect": 310,
       "activat": 33,
       "quality": 1,
@@ -70,11 +70,11 @@
     }
   },
   "summary": {
-    "total": 580,
+    "total": 588,
     "connect": 402,
-    "connect_rate": 69.3,
+    "connect_rate": 68.4,
     "activat": 44,
-    "activat_rate": 7.6,
+    "activat_rate": 7.5,
     "quality": 5,
     "quality_rate": 0.9,
     "referral": 0
