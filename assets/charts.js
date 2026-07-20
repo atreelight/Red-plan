@@ -669,10 +669,10 @@
   }
 
   // ─── 精确查询（静态模式在前端执行）───
-  async function fetchQuery(field, keyword, exact) {
+  async function fetchQuery(field, keyword, exact, aliases) {
     // 静态模式：前端过滤
     if (isStaticHost) {
-      return frontendQuery(field, keyword, exact);
+      return frontendQuery(field, keyword, exact, aliases);
     }
     // 本地服务器模式
     try {
@@ -688,7 +688,7 @@
   }
 
   // ─── 前端查询：从 staticRecords 中筛选 ───
-  async function frontendQuery(field, keyword, exact) {
+  async function frontendQuery(field, keyword, exact, aliases) {
     // 确保记录已加载
     if (!staticRecords) {
       try {
@@ -699,13 +699,21 @@
     }
     if (!staticRecords) { return null; }
 
+    // 构建匹配关键词列表（主词 + 别名）
+    var matchKeywords = [keyword];
+    if (aliases && aliases.length > 0) {
+      for (var ai = 0; ai < aliases.length; ai++) { matchKeywords.push(aliases[ai]); }
+    }
+
     var matched = [];
     for (var i = 0; i < staticRecords.length; i++) {
       var val = String(staticRecords[i][field] || '');
       if (exact) {
         if (val === keyword) { matched.push(staticRecords[i]); }
       } else {
-        if (val.indexOf(keyword) >= 0) { matched.push(staticRecords[i]); }
+        for (var ki = 0; ki < matchKeywords.length; ki++) {
+          if (val.indexOf(matchKeywords[ki]) >= 0) { matched.push(staticRecords[i]); break; }
+        }
       }
     }
 
@@ -764,10 +772,19 @@
       }
     }
     // 再匹配基础词（从移除复合词后的文本中查找）
-    var simpleCars = ['扬光', '宏光', '之光', '荣光', '征程', '新卡', '小卡'];
+    // 扬光需要模糊匹配"杨光""阳光"等同音异写
+    var simpleCars = [
+      { kw: '扬光', aliases: ['杨光', '阳光'] },
+      { kw: '宏光', aliases: [] },
+      { kw: '之光', aliases: [] },
+      { kw: '荣光', aliases: [] },
+      { kw: '征程', aliases: [] },
+      { kw: '新卡', aliases: [] },
+      { kw: '小卡', aliases: [] }
+    ];
     for (var i = 0; i < simpleCars.length; i++) {
-      if (textForSimple.indexOf(simpleCars[i]) >= 0) {
-        queries.push({ field: '车型', keyword: simpleCars[i], exact: false });
+      if (textForSimple.indexOf(simpleCars[i].kw) >= 0) {
+        queries.push({ field: '车型', keyword: simpleCars[i].kw, exact: false, aliases: simpleCars[i].aliases });
       }
     }
 
@@ -797,7 +814,7 @@
     // 执行所有匹配的查询
     var results = [];
     for (var i = 0; i < queries.length; i++) {
-      var result = await fetchQuery(queries[i].field, queries[i].keyword, queries[i].exact);
+      var result = await fetchQuery(queries[i].field, queries[i].keyword, queries[i].exact, queries[i].aliases);
       if (result) { results.push(result); }
     }
 
